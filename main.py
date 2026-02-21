@@ -16,7 +16,12 @@ def resource_path(relative_path):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    # Aplicar el Icono a la ventana de la aplicación
+    # --- AÑADE ESTO PARA QUE EL ICONO SE VEA EN LA BARRA DE TAREAS ---
+    import ctypes
+    myappid = 'LionApps.YTDownloader.YTD.1' # Una cadena única
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    # -----------------------------------------------------------------
+
     app_icon = QIcon(resource_path("icon.ico"))
     app.setWindowIcon(app_icon)
     
