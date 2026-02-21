@@ -1,20 +1,19 @@
-# Entornos virtuales
-venv/
-.env/
-env/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
 
-# Archivos de compilación de PyInstaller
+# PyInstaller & Build
 build/
 dist/
 *.spec
+LionYTDownloader_v*.zip
 
-# Binarios de FFmpeg (Son pesados, el usuario final debería descargarlos)
-# ffmpeg.exe
-# ffprobe.exe
-
-# Archivos del SO
-.DS_Store
-Thumbs.db
+# Binaries (Do not upload to git, build them locally)
 ffmpeg.exe
 ffprobe.exe
+
+# Local assets
+icon.ico

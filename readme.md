@@ -40,14 +40,12 @@ To merge high-quality video/audio and convert files to MP4, you must have FFmpeg
 ### 📦 Building the Executable (.exe)
 
 I have included a dedicated build script for Windows users:
+1. Ensure `icon.ico`, `ffmpeg.exe`, and `ffprobe.exe` are in the project root folder.
+2. Double-click `build_app.bat`.
+3. Enter the version number when prompted.
+4. The script will generate a ready-to-distribute `.zip` file containing the App and the required FFmpeg binaries.
 
-    Ensure icon.ico is in the project folder.
-
-    Double-click build_app.bat.
-
-    Your portable executable will be generated inside the dist/ folder.
-
-🤝 Custom Software & Freelance Services
+## 🤝 Custom Software & Freelance Services
 
 This tool was created to demonstrate how automation can drastically speed up a creative workflow.
 

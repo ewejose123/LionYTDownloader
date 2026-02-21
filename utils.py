@@ -24,7 +24,7 @@ class SmartTextEdit(QTextEdit):
             QTextEdit {
                 background-color: #1e1e2e;
                 color: #cdd6f4;
-                caret-color: #cdd6f4; 
+                caret-color: #ffffff; 
                 border: 2px dashed #555555;
                 border-radius: 8px;
                 padding: 10px;
