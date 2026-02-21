@@ -1,0 +1,20 @@
+# Entornos virtuales
+venv/
+.env/
+env/
+__pycache__/
+
+# Archivos de compilación de PyInstaller
+build/
+dist/
+*.spec
+
+# Binarios de FFmpeg (Son pesados, el usuario final debería descargarlos)
+# ffmpeg.exe
+# ffprobe.exe
+
+# Archivos del SO
+.DS_Store
+Thumbs.db
+ffmpeg.exe
+ffprobe.exe
