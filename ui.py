@@ -5,17 +5,18 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QComboBox, QLabel, 
                              QProgressBar, QFileDialog, QMessageBox, QListWidget, 
                              QSplitter, QListWidgetItem)
-from PyQt6.QtCore import Qt, QUrl, QSize
-from PyQt6.QtGui import QColor, QTextCharFormat, QTextCursor, QDesktopServices, QIcon, QPixmap
+from PyQt6.QtCore import Qt, QUrl
+# AQUI FALTABA QTextCursor, YA ESTA AÑADIDO:
+from PyQt6.QtGui import QColor, QTextCharFormat, QDesktopServices, QTextCursor
 
 from utils import SmartTextEdit
-from workers import DownloadWorker, CheckExistsWorker, UpdateWorker, ThumbnailLoaderWorker
+from workers import DownloadWorker, CheckExistsWorker, UpdateWorker
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Lion YT Downloader")
-        self.resize(1100, 700)
+        self.resize(1000, 650)
         self.setup_ui()
         self.refresh_file_list()
         
@@ -36,14 +37,8 @@ class MainWindow(QMainWindow):
         btn_open_folder.setStyleSheet("background-color: #89dceb; color: black; font-weight: bold;")
         btn_open_folder.clicked.connect(self.open_output_folder)
         
-        # NUEVO: Menú de selección de calidad
         self.combo_format = QComboBox()
-        self.combo_format.addItems([
-            "Video (Mejor Calidad / 4K+)", 
-            "Video (Máx 1080p)", 
-            "Video (Máx 720p)", 
-            "Solo Audio (MP3)"
-        ])
+        self.combo_format.addItems(["Video (Mejor)", "Video (1080p)", "Video (720p)", "Audio (MP3)"])
         
         top_layout.addWidget(QLabel("Carpeta:"))
         top_layout.addWidget(self.txt_dir)
@@ -88,20 +83,18 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout(right_panel)
         right_layout.setContentsMargins(10, 10, 0, 0)
         
-        right_layout.addWidget(QLabel("📁 Archivos en destino (Con Miniaturas):"))
+        right_layout.addWidget(QLabel("📁 Archivos en destino:"))
         self.list_files = QListWidget()
-        self.list_files.setIconSize(QSize(100, 56)) # Tamaño de miniaturas
-        self.list_files.setSpacing(4)
-        self.list_files.setStyleSheet("QListWidget { background-color: #181825; border: 1px solid #313244; border-radius: 8px; padding: 5px; font-size: 13px; } QListWidget::item { padding: 5px; }")
+        self.list_files.setStyleSheet("QListWidget { background-color: #181825; border: 1px solid #313244; border-radius: 8px; padding: 5px; font-size: 13px; }")
+        right_layout.addWidget(self.list_files)
         
         btn_refresh_list = QPushButton("🔄 Actualizar Lista")
         btn_refresh_list.clicked.connect(self.refresh_file_list)
-        right_layout.addWidget(self.list_files)
         right_layout.addWidget(btn_refresh_list)
 
         splitter.addWidget(left_panel)
         splitter.addWidget(right_panel)
-        splitter.setSizes([550, 550])
+        splitter.setSizes([550, 450])
         main_layout.addWidget(splitter)
 
         bottom_layout = QHBoxLayout()
@@ -125,9 +118,7 @@ class MainWindow(QMainWindow):
         bottom_layout.addWidget(self.btn_download)
         main_layout.addLayout(bottom_layout)
 
-    # --- Funciones ---
     def get_format_type(self):
-        """Traduce la selección del combobox a una palabra clave para el worker"""
         idx = self.combo_format.currentIndex()
         if idx == 0: return 'best'
         elif idx == 1: return '1080'
@@ -145,29 +136,13 @@ class MainWindow(QMainWindow):
         self.list_files.clear()
         folder = self.txt_dir.text()
         if not os.path.exists(folder): return
-            
-        video_exts = ('.mp4', '.mkv', '.webm')
-        audio_exts = ('.mp3', '.m4a', '.wav')
-        
-        try: archivos = sorted([f for f in os.listdir(folder) if f.lower().endswith(video_exts + audio_exts)])
-        except: archivos = []
-        
-        files_to_process = []
-        for index, f in enumerate(archivos):
-            ext = os.path.splitext(f)[1].lower()
-            item = QListWidgetItem(f"🎵 {f}" if ext in audio_exts else f"🎬 {f}")
-            self.list_files.addItem(item)
-            files_to_process.append((index, f))
-            
-        if files_to_process:
-            self.thumb_worker = ThumbnailLoaderWorker(folder, files_to_process)
-            self.thumb_worker.thumbnail_loaded.connect(self.set_thumbnail_icon)
-            self.thumb_worker.start()
-
-    def set_thumbnail_icon(self, row, image_path):
-        item = self.list_files.item(row)
-        if item and not QPixmap(image_path).isNull():
-            item.setIcon(QIcon(QPixmap(image_path)))
+        v_exts = ('.mp4', '.mkv', '.webm'); a_exts = ('.mp3', '.m4a', '.wav')
+        try:
+            archivos = sorted([f for f in os.listdir(folder) if f.lower().endswith(v_exts + a_exts)])
+            for f in archivos:
+                ext = os.path.splitext(f)[1].lower()
+                self.list_files.addItem(f"🎵 {f}" if ext in a_exts else f"🎬 {f}")
+        except: pass
 
     def clear_text_box(self):
         self.text_input.clear()
@@ -175,41 +150,61 @@ class MainWindow(QMainWindow):
 
     def reset_text_colors(self):
         cursor = self.text_input.textCursor()
-        cursor.select(QTextCursor.SelectionType.Document)
+        cursor.select(QTextCursor.SelectionType.Document) # AHORA SÍ FUNCIONA
         fmt = QTextCharFormat()
         fmt.setForeground(QColor("#cdd6f4"))
         fmt.setFontUnderline(False)
         cursor.mergeCharFormat(fmt)
 
+    def parse_input_text(self):
+        raw_text = self.text_input.toPlainText()
+        parsed_items = []
+        lines = raw_text.split('\n')
+        current_title = None
+        unique_urls = set()
+
+        for line in lines:
+            line = line.strip()
+            if not line: continue
+
+            url_match = re.search(r'((?:https?://|www\.)[^\s]+)', line)
+            
+            if url_match:
+                url = url_match.group(1)
+                if url.startswith('www.'): url = 'https://' + url
+
+                if url not in unique_urls:
+                    unique_urls.add(url)
+                    parsed_items.append({'url': url, 'title': current_title})
+                
+                current_title = None
+            else:
+                current_title = line
+                
+        return parsed_items
+
     def check_existing_links(self):
-        urls = list(dict.fromkeys(re.findall(r'(https?://[^\s]+)', self.text_input.toPlainText())))
-        if not urls: return
+        items = self.parse_input_text()
+        if not items: return
         self.reset_text_colors()
         self.btn_download.setEnabled(False)
-        self.lbl_status.setText("Verificando enlaces...")
-        
-        fmt = self.get_format_type() # NUEVO
-        
-        self.check_worker = CheckExistsWorker(urls, self.txt_dir.text(), fmt)
+        self.lbl_status.setText("Verificando...")
+        self.check_worker = CheckExistsWorker(items, self.txt_dir.text(), self.get_format_type())
         self.check_worker.progress.connect(self.progress_bar.setValue)
         self.check_worker.item_checked.connect(self.color_link_by_state)
         self.check_worker.finished.connect(lambda: [self.lbl_status.setText("Verificación completada."), self.btn_download.setEnabled(True)])
         self.check_worker.start()
 
     def start_downloads(self):
+        items = self.parse_input_text()
+        if not items: return
         self.reset_text_colors()
-        urls = list(dict.fromkeys(re.findall(r'(https?://[^\s]+)', self.text_input.toPlainText())))
-        if not urls: return
-
         self.btn_download.setEnabled(False)
         self.text_input.setReadOnly(True)
         self.stats = {'success': 0, 'exists': 0, 'error': 0}
-
-        fmt = self.get_format_type() # NUEVO
-
-        self.worker = DownloadWorker(urls, self.txt_dir.text(), fmt)
+        self.worker = DownloadWorker(items, self.txt_dir.text(), self.get_format_type())
         self.worker.progress.connect(self.progress_bar.setValue)
-        self.worker.status_update.connect(lambda t, s, e: [self.lbl_status.setText(f"Descargando: {t[:57]}"), self.lbl_speed.setText(f"Velocidad: {s}"), self.lbl_eta.setText(f"ETA: {e}")])
+        self.worker.status_update.connect(lambda t, s, e: [self.lbl_status.setText(f"Descargando: {t[:57]}"), self.lbl_speed.setText(f"V: {s}"), self.lbl_eta.setText(f"T: {e}")])
         self.worker.item_finished.connect(self.color_link_by_state)
         self.worker.finished.connect(self.downloads_completed)
         self.worker.start()
@@ -220,20 +215,19 @@ class MainWindow(QMainWindow):
         elif state == "exists": color, underline = QColor("#fab387"), False
         elif state == "error": color, underline = QColor("#f38ba8"), True
         else: return
-
-        cursor = self.text_input.document().find(url)
+        
+        # Correccion para encontrar URL si fue modificada (www -> https)
+        url_to_find = url.replace('https://', '') if url.startswith('https://www.') else url
+        cursor = self.text_input.document().find(url_to_find)
         if not cursor.isNull():
             fmt = QTextCharFormat()
-            fmt.setForeground(color)
-            fmt.setFontUnderline(underline)
+            fmt.setForeground(color); fmt.setFontUnderline(underline)
             cursor.mergeCharFormat(fmt)
 
     def downloads_completed(self):
-        self.lbl_status.setText("Completado.")
-        self.btn_download.setEnabled(True)
-        self.text_input.setReadOnly(False)
-        self.refresh_file_list()
-        msg = f"✅ Nuevos: {self.stats['success']}\n⏭️ Saltados (ya existían): {self.stats['exists']}\n❌ Errores: {self.stats['error']}"
+        self.lbl_status.setText("Completado."); self.btn_download.setEnabled(True)
+        self.text_input.setReadOnly(False); self.refresh_file_list()
+        msg = f"✅ Nuevos: {self.stats['success']}\n⏭️ Saltados: {self.stats['exists']}\n❌ Errores: {self.stats['error']}"
         QMessageBox.information(self, "Resumen", msg)
 
     def update_ytdlp(self):

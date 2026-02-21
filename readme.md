@@ -1,68 +1,173 @@
-# 🦁 Lion YT Downloader
+# 🦁 Lion YT Downloader v1.0.0
 
-**Lion YT Downloader** is a high-performance, open-source desktop application designed to streamline the process of downloading video and audio from YouTube and hundreds of other platforms. 
+**Lion YT Downloader** es una aplicación de escritorio de alto rendimiento diseñada para optimizar radicalmente el flujo de trabajo de descarga de contenido multimedia.
 
-Built with **Python 3.13** and **PyQt6**, it offers a polished dark-themed interface with advanced features for professional workflows.
+Desarrollada con **Python 3.13** y **PyQt6**, ofrece una interfaz oscura minimalista y robusta, enfocada en:
 
----
-
-## ✨ Key Features
-
-- **🚀 Smart Drag & Drop:** Drag video thumbnails or URLs directly from your browser into the app.
-- **🔄 Auto-Format Conversion:** All video downloads are automatically converted to `.mp4` using FFmpeg for universal compatibility.
-- **🎭 Quality Selection:** 
-  - **Ultra Quality:** 4K/8K (Best available).
-  - **High Definition:** Forced 1080p or 720p.
-  - **Audio Only:** Pure MP3 (192kbps).
-- **🖼️ Async Thumbnails:** High-resolution thumbnails are rendered in the sidebar as you download, without freezing the UI.
-- **🧠 Duplicate Detection:** Automatically detects if a video is already in your output folder (Orange color code) to save time and bandwidth.
-- **🎨 Visual Status Coding:**
-  - 🟢 **Green:** Downloaded successfully.
-  - 🟡 **Yellow:** File already exists (skipped).
-  - 🔴 **Red:** Error or invalid link.
+* ⚡ Velocidad
+* 🌍 Compatibilidad universal
+* 🗂 Organización avanzada de archivos
 
 ---
 
-## 🛠 Installation & Setup
+## ✨ Características Principales
 
-### For Developers (Running from source)
-If you want to run the code manually, install the required dependencies:
+### 🚀 Integración Inteligente (Drag & Drop)
+
+Arrastra enlaces o miniaturas directamente desde tu navegador a la aplicación.
+
+### 🔄 Conversión Automática a MP4 / MP3
+
+Olvídate de formatos incompatibles.
+Todo se procesa mediante **FFmpeg**, garantizando compatibilidad total en cualquier dispositivo.
+
+### 🎭 Control de Calidad Selectivo
+
+* **Ultra** → 4K / 8K (Mejor calidad disponible)
+* **HD** → Forzado a 1080p o 720p (optimización de espacio)
+* **Audio** → MP3 de alta fidelidad (192 kbps)
+
+### 🧠 Detección Inteligente de Duplicados
+
+La aplicación escanea la carpeta de destino y evita descargar archivos ya existentes.
+
+* 🟡 Se marcan en **naranja** para indicar que fueron omitidos.
+
+### 🎨 Semáforo de Estado Visual
+
+| Estado     | Significado                |
+| ---------- | -------------------------- |
+| 🟢 Verde   | Descargado con éxito       |
+| 🟡 Naranja | Ya existía (omitido)       |
+| 🔴 Rojo    | Enlace roto o error de red |
+
+---
+
+## 💡 Innovación: Asignación Dinámica de Nombres
+
+Permite organizar tu librería **antes** de iniciar la descarga.
+
+El programa analiza el texto pegado y:
+
+* Si detecta texto justo encima de un enlace → lo usa como nombre del archivo.
+* Si no hay texto → usa el título original del video.
+
+### Ejemplo de uso
+
+Puedes pegar directamente en la aplicación:
+
+```text
+Entrevista con el CEO
+https://www.youtube.com/watch?v=ejemplo1
+
+Documental de Naturaleza 2026
+www.youtube.com/watch?v=ejemplo2
+
+https://youtu.be/ejemplo3
+```
+
+### Resultado generado:
+
+```
+Entrevista con el CEO.mp4
+Documental de Naturaleza 2026.mp4
+Titulo_Original_De_Youtube.mp4
+```
+
+*(El tercero usa el título original al no detectar texto personalizado.)*
+
+### Sistema Robusto
+
+* Corrige automáticamente enlaces que empiezan por `www.`
+* Limpia caracteres inválidos (`/ \ : * ? " < > |`)
+* Garantiza nombres compatibles con el sistema operativo
+
+---
+
+## 🛠 Instalación y Configuración
+
+### Para Desarrolladores (Código Fuente)
+
+Instala las dependencias:
+
+```bash
 pip install PyQt6 yt-dlp pyqtdarktheme
+```
 
-### FFmpeg Requirement (Essential)
+---
 
-To merge high-quality video/audio and convert files to MP4, you must have FFmpeg:
+## ⚙ Requisito Esencial: FFmpeg
 
-    Download the binaries (ffmpeg.exe and ffprobe.exe) from Gyan.dev.
+Para fusionar audio/video en HD y convertir a MP4 necesitas **FFmpeg**.
 
-    Place both .exe files in the same folder as main.py (or next to the final LionYTDownloader.exe).
+### Pasos:
 
-### 📦 Building the Executable (.exe)
+1. Descarga `ffmpeg.exe` y `ffprobe.exe` desde:
+   [https://www.gyan.dev/ffmpeg/builds/](https://www.gyan.dev/ffmpeg/builds/)
 
-I have included a dedicated build script for Windows users:
-1. Ensure `icon.ico`, `ffmpeg.exe`, and `ffprobe.exe` are in the project root folder.
-2. Double-click `build_app.bat`.
-3. Enter the version number when prompted.
-4. The script will generate a ready-to-distribute `.zip` file containing the App and the required FFmpeg binaries.
+2. Coloca ambos archivos:
 
-## 🤝 Custom Software & Freelance Services
+   * En la raíz del proyecto (junto a `main.py`), **o**
+   * En la carpeta del ejecutable final
 
-This tool was created to demonstrate how automation can drastically speed up a creative workflow.
+---
 
-Do you need a custom tool for your business?
-I specialize in building:
+## 📦 Generación del Ejecutable (.exe)
 
-    Custom Desktop Applications (Windows/Mac/Linux).
+Incluye un script automático para Windows.
 
-    Workflow Automation & Web Scraping scripts.
+### Pasos:
 
-    Data Processing tools and internal management software.
+1. Asegúrate de tener en la raíz:
 
-If you want to speed up your work with software tailored specifically to your needs, let's talk!
+   * `icon.ico`
+   * `ffmpeg.exe`
+   * `ffprobe.exe`
 
-📩 Contact me for inquiries: ewejose@gmail.com
-📄 License
+2. Ejecuta:
 
-This project is open-source under the MIT License. You are free to use, modify, and distribute it as you wish.
+```bash
+build_app.bat
+```
 
-Created with ❤️ by Ewe.
+3. Introduce el número de versión cuando se solicite.
+
+### Resultado
+
+Se generará un archivo `.zip` listo para distribución que contiene:
+
+* La aplicación (modo carpeta → máxima estabilidad)
+* Los binarios de FFmpeg incluidos
+
+---
+
+## 🤝 Software a Medida y Servicios Freelance
+
+Esta herramienta demuestra cómo la automatización puede acelerar procesos creativos y técnicos.
+
+Si necesitas una herramienta personalizada, puedo ayudarte con:
+
+* 🖥 Aplicaciones de Escritorio (Windows, Mac, Linux)
+* 🔁 Automatización de Flujos de Trabajo
+* 🌐 Web Scraping
+* 📊 Procesamiento de Datos
+* 🏢 Software de gestión interna
+
+---
+
+## 📩 Contacto
+
+**Email:** [ewejose@gmail.com](mailto:ewejose@gmail.com)
+
+Si quieres optimizar tu trabajo con software diseñado específicamente para tus necesidades, ¡hablemos!
+
+---
+
+## 📄 Licencia
+
+Este proyecto es **código abierto bajo la Licencia MIT**.
+Eres libre de usarlo, modificarlo y distribuirlo.
+
+---
+
+Creado con ❤️ por **Ewe**

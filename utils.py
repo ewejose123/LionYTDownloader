@@ -4,7 +4,6 @@ from PyQt6.QtGui import QColor, QTextCharFormat
 from PyQt6.QtCore import Qt
 
 class YtDlpLogger:
-    """Interceptor para saber si yt-dlp se saltó un archivo por ya existir."""
     def __init__(self):
         self.already_exists = False
     def debug(self, msg): self._check(msg)
@@ -19,7 +18,7 @@ class SmartTextEdit(QTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAcceptDrops(True)
-        # caret-color arregla el problema del cursor invisible al hacer clic
+        # AQUI ESTA EL ARREGLO DEL CURSOR (caret-color)
         self.setStyleSheet("""
             QTextEdit {
                 background-color: #1e1e2e;
@@ -33,7 +32,7 @@ class SmartTextEdit(QTextEdit):
         """)
 
     def keyPressEvent(self, event):
-        # Evita que al editar a mano sigas escribiendo en rojo o verde
+        # Al escribir, reseteamos el color a blanco por si estamos al lado de un link rojo/verde
         fmt = QTextCharFormat()
         fmt.setForeground(QColor("#cdd6f4"))
         fmt.setFontUnderline(False)
@@ -53,31 +52,25 @@ class SmartTextEdit(QTextEdit):
     def dropEvent(self, event):
         self.dragLeaveEvent(event)
         mime = event.mimeData()
-        urls_to_add = []
         
-        if mime.hasUrls():
-            for url in mime.urls():
-                if url.scheme() in ['http', 'https']:
-                    urls_to_add.append(url.toString())
-        elif mime.hasText():
-            text = mime.text()
-            extracted = re.findall(r'(https?://[^\s]+)', text)
-            if extracted:
-                urls_to_add.extend(extracted)
-            else:
-                urls_to_add.append(text)
-                
-        if urls_to_add:
-            # Reseteamos el color antes de inyectar texto arrastrado
+        text_to_insert = ""
+        if mime.hasText():
+            text_to_insert = mime.text()
+        elif mime.hasUrls():
+            # Filtramos solo http/https
+            urls = [u.toString() for u in mime.urls() if u.scheme() in ['http', 'https']]
+            text_to_insert = "\n".join(urls)
+            
+        if text_to_insert:
+            # Reseteamos formato antes de pegar
             fmt = QTextCharFormat()
             fmt.setForeground(QColor("#cdd6f4"))
             self.setCurrentCharFormat(fmt)
             
             current_text = self.toPlainText()
-            new_text = "\n".join(urls_to_add)
             if current_text and not current_text.endswith('\n'):
-                self.insertPlainText("\n" + new_text + "\n")
+                self.insertPlainText("\n" + text_to_insert + "\n")
             else:
-                self.insertPlainText(new_text + "\n")
+                self.insertPlainText(text_to_insert + "\n")
                 
         event.acceptProposedAction()
