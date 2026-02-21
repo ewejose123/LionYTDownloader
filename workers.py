@@ -31,36 +31,37 @@ class DownloadWorker(QThread):
                 'writethumbnail': True, 
             }
 
-            # Forzamos la conversión de las miniaturas a JPG para que se vean bien en el .exe
-            thumb_postprocessor = {'key': 'FFmpegThumbnailsConvertor', 'format': 'jpg'}
+            thumb_pp = {'key': 'FFmpegThumbnailsConvertor', 'format': 'jpg'}
 
             if self.format_type == 'audio':
                 ydl_opts.update({
                     'format': 'bestaudio/best',
                     'postprocessors': [
                         {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'},
-                        thumb_postprocessor
+                        thumb_pp
                     ]
                 })
             else:
+                # Lógica para forzar MP4
                 if self.format_type == '1080':
-                    vid_format = 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best'
+                    vid_f = 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]/best'
                 elif self.format_type == '720':
-                    vid_format = 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best'
+                    vid_f = 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best'
                 else: 
-                    vid_format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                    vid_f = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best'
                 
                 ydl_opts.update({
-                    'format': vid_format,
+                    'format': vid_f,
                     'merge_output_format': 'mp4',
-                    'postprocessors': [thumb_postprocessor]
+                    'recodevideo': 'mp4', # FORZAR CONVERSIÓN A MP4
+                    'postprocessors': [thumb_pp]
                 })
 
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     error_code = ydl.download([url])
                     if error_code != 0: success = False
-            except Exception as e:
+            except Exception:
                 success = False
 
             estado = "error" if not success else ("exists" if logger.already_exists else "success")
@@ -70,17 +71,16 @@ class DownloadWorker(QThread):
 
     def hook(self, d):
         if d['status'] == 'downloading':
-            percent_str = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_percent_str', '0%').replace('%', '').strip()) 
-            try: self.progress.emit(int(float(percent_str)))
-            except ValueError: pass
-            
-            speed = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_speed_str', '...'))
-            eta = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_eta_str', '...'))
-            filename = os.path.basename(d.get('filename', 'Descargando...'))
-            self.status_update.emit(filename, speed, eta)
+            p = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_percent_str', '0%').replace('%', '').strip()) 
+            try: self.progress.emit(int(float(p)))
+            except: pass
+            s = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_speed_str', '...'))
+            e = re.sub(r'\x1b\[[0-9;]*m', '', d.get('_eta_str', '...'))
+            f = os.path.basename(d.get('filename', 'Descargando...'))
+            self.status_update.emit(f, s, e)
         elif d['status'] == 'finished':
             self.progress.emit(100)
-            self.status_update.emit("Procesando/Uniendo archivo...", "-", "-")
+            self.status_update.emit("Finalizando/Convirtiendo a MP4...", "-", "-")
 
 class CheckExistsWorker(QThread):
     progress = pyqtSignal(int)

@@ -1,43 +1,70 @@
 # 🦁 Lion YT Downloader
 
-**Lion YT Downloader** is a modern, fast, and feature-rich desktop application built with Python and PyQt6 to download videos and audio from YouTube and hundreds of other platforms effortlessly.
+**Lion YT Downloader** is a high-performance, open-source desktop application designed to streamline the process of downloading video and audio from YouTube and hundreds of other platforms. 
 
-It features a smart drag-and-drop interface, selective video qualities, async thumbnail rendering, and automated file-checking to avoid redownloading existing files.
+Built with **Python 3.13** and **PyQt6**, it offers a polished dark-themed interface with advanced features for professional workflows.
 
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
+---
 
-## ✨ Features
-- **Smart Drag & Drop:** Drag video thumbnails directly from your browser to the app.
-- **Selective Quality:** Choose between Maximum Quality (4K), 1080p, 720p, or Audio only (MP3).
-- **Intelligent Tracking:** Visual color codes for success (Green), already downloaded (Yellow), and errors (Red).
-- **Asynchronous UI:** Downloads run in the background without freezing the application.
-- **Output Browser:** View your output folder directly in the app with real-time rendered thumbnails.
+## ✨ Key Features
 
-## 🚀 Installation & Usage
+- **🚀 Smart Drag & Drop:** Drag video thumbnails or URLs directly from your browser into the app.
+- **🔄 Auto-Format Conversion:** All video downloads are automatically converted to `.mp4` using FFmpeg for universal compatibility.
+- **🎭 Quality Selection:** 
+  - **Ultra Quality:** 4K/8K (Best available).
+  - **High Definition:** Forced 1080p or 720p.
+  - **Audio Only:** Pure MP3 (192kbps).
+- **🖼️ Async Thumbnails:** High-resolution thumbnails are rendered in the sidebar as you download, without freezing the UI.
+- **🧠 Duplicate Detection:** Automatically detects if a video is already in your output folder (Orange color code) to save time and bandwidth.
+- **🎨 Visual Status Coding:**
+  - 🟢 **Green:** Downloaded successfully.
+  - 🟡 **Yellow:** File already exists (skipped).
+  - 🔴 **Red:** Error or invalid link.
 
-### 1. Pre-requisites (For the Source Code)
-Make sure you have Python installed, then run:
+---
+
+## 🛠 Installation & Setup
+
+### For Developers (Running from source)
+If you want to run the code manually, install the required dependencies:
 pip install PyQt6 yt-dlp pyqtdarktheme
 
-### 2. FFmpeg (Crucial)
+### FFmpeg Requirement (Essential)
 
-You must download FFmpeg for merging High-Quality video and audio:
+To merge high-quality video/audio and convert files to MP4, you must have FFmpeg:
 
-    Download ffmpeg.exe from Gyan.dev.
+    Download the binaries (ffmpeg.exe and ffprobe.exe) from Gyan.dev.
 
-    Place ffmpeg.exe in the root folder of this project (next to main.py or the .exe).
+    Place both .exe files in the same folder as main.py (or next to the final LionYTDownloader.exe).
 
-### 3. Run the App
-code Bash
+### 📦 Building the Executable (.exe)
 
-python main.py
+I have included a dedicated build script for Windows users:
 
-🤝 Need Custom Software?
+    Ensure icon.ico is in the project folder.
 
-This app is open-source and free to use. However, if you need custom software, automation tools, or tailored applications for your workflow or business, I can build it for you!
+    Double-click build_app.bat.
 
-📩 Contact me: ewejose@gmail.com
+    Your portable executable will be generated inside the dist/ folder.
+
+🤝 Custom Software & Freelance Services
+
+This tool was created to demonstrate how automation can drastically speed up a creative workflow.
+
+Do you need a custom tool for your business?
+I specialize in building:
+
+    Custom Desktop Applications (Windows/Mac/Linux).
+
+    Workflow Automation & Web Scraping scripts.
+
+    Data Processing tools and internal management software.
+
+If you want to speed up your work with software tailored specifically to your needs, let's talk!
+
+📩 Contact me for inquiries: ewejose@gmail.com
 📄 License
 
-This project is open-sourced under the MIT License. Feel free to use, modify, and distribute it.
+This project is open-source under the MIT License. You are free to use, modify, and distribute it as you wish.
+
+Created with ❤️ by Ewe.
