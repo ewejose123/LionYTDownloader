@@ -4,9 +4,8 @@ from pathlib import Path
 from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QLineEdit, QPushButton, QComboBox, QLabel, 
                              QProgressBar, QFileDialog, QMessageBox, QListWidget, 
-                             QSplitter, QListWidgetItem)
+                             QSplitter)
 from PyQt6.QtCore import Qt, QUrl
-# AQUI FALTABA QTextCursor, YA ESTA AÑADIDO:
 from PyQt6.QtGui import QColor, QTextCharFormat, QDesktopServices, QTextCursor
 
 from utils import SmartTextEdit
@@ -16,7 +15,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Lion YT Downloader")
-        self.resize(1000, 650)
+        self.resize(1050, 650)
         self.setup_ui()
         self.refresh_file_list()
         
@@ -40,12 +39,17 @@ class MainWindow(QMainWindow):
         self.combo_format = QComboBox()
         self.combo_format.addItems(["Video (Mejor)", "Video (1080p)", "Video (720p)", "Audio (MP3)"])
         
+        self.combo_codec = QComboBox()
+        self.combo_codec.addItems(["MKV + ProRes", "MKV + H.265", "MP4 + H.264", "Original"])
+        
         top_layout.addWidget(QLabel("Carpeta:"))
         top_layout.addWidget(self.txt_dir)
         top_layout.addWidget(btn_browse)
         top_layout.addWidget(btn_open_folder)
         top_layout.addWidget(QLabel("Calidad:"))
         top_layout.addWidget(self.combo_format)
+        top_layout.addWidget(QLabel("Códec:"))
+        top_layout.addWidget(self.combo_codec)
         main_layout.addLayout(top_layout)
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -125,6 +129,13 @@ class MainWindow(QMainWindow):
         elif idx == 2: return '720'
         else: return 'audio'
 
+    def get_codec_type(self):
+        idx = self.combo_codec.currentIndex()
+        if idx == 0: return 'prores'
+        elif idx == 1: return 'h265'
+        elif idx == 2: return 'h264'
+        else: return 'original'
+
     def browse_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta", self.txt_dir.text())
         if folder: self.txt_dir.setText(folder)
@@ -136,7 +147,7 @@ class MainWindow(QMainWindow):
         self.list_files.clear()
         folder = self.txt_dir.text()
         if not os.path.exists(folder): return
-        v_exts = ('.mp4', '.mkv', '.webm'); a_exts = ('.mp3', '.m4a', '.wav')
+        v_exts = ('.mp4', '.mkv', '.webm', '.mov'); a_exts = ('.mp3', '.m4a', '.wav')
         try:
             archivos = sorted([f for f in os.listdir(folder) if f.lower().endswith(v_exts + a_exts)])
             for f in archivos:
@@ -150,7 +161,7 @@ class MainWindow(QMainWindow):
 
     def reset_text_colors(self):
         cursor = self.text_input.textCursor()
-        cursor.select(QTextCursor.SelectionType.Document) # AHORA SÍ FUNCIONA
+        cursor.select(QTextCursor.SelectionType.Document)
         fmt = QTextCharFormat()
         fmt.setForeground(QColor("#cdd6f4"))
         fmt.setFontUnderline(False)
@@ -158,7 +169,7 @@ class MainWindow(QMainWindow):
 
     def parse_input_text(self):
         raw_text = self.text_input.toPlainText()
-        parsed_items = []
+        parsed_items =[]
         lines = raw_text.split('\n')
         current_title = None
         unique_urls = set()
@@ -189,11 +200,19 @@ class MainWindow(QMainWindow):
         self.reset_text_colors()
         self.btn_download.setEnabled(False)
         self.lbl_status.setText("Verificando...")
-        self.check_worker = CheckExistsWorker(items, self.txt_dir.text(), self.get_format_type())
-        self.check_worker.progress.connect(self.progress_bar.setValue)
+        self.check_worker = CheckExistsWorker(items, self.txt_dir.text(), self.get_format_type(), self.get_codec_type())
+        self.check_worker.progress.connect(self.update_progress_bar)
         self.check_worker.item_checked.connect(self.color_link_by_state)
-        self.check_worker.finished.connect(lambda: [self.lbl_status.setText("Verificación completada."), self.btn_download.setEnabled(True)])
+        self.check_worker.finished.connect(lambda:[self.lbl_status.setText("Verificación completada."), self.btn_download.setEnabled(True)])
         self.check_worker.start()
+
+    def update_progress_bar(self, value):
+        # Si recibimos -1, ponemos la barra en modo indeterminado (animación de carga continua)
+        if value == -1:
+            self.progress_bar.setRange(0, 0)
+        else:
+            self.progress_bar.setRange(0, 100)
+            self.progress_bar.setValue(value)
 
     def start_downloads(self):
         items = self.parse_input_text()
@@ -202,21 +221,32 @@ class MainWindow(QMainWindow):
         self.btn_download.setEnabled(False)
         self.text_input.setReadOnly(True)
         self.stats = {'success': 0, 'exists': 0, 'error': 0}
-        self.worker = DownloadWorker(items, self.txt_dir.text(), self.get_format_type())
-        self.worker.progress.connect(self.progress_bar.setValue)
-        self.worker.status_update.connect(lambda t, s, e: [self.lbl_status.setText(f"Descargando: {t[:57]}"), self.lbl_speed.setText(f"V: {s}"), self.lbl_eta.setText(f"T: {e}")])
+        self.error_details =[] # Reiniciamos registro de errores
+        
+        self.worker = DownloadWorker(items, self.txt_dir.text(), self.get_format_type(), self.get_codec_type())
+        
+        self.worker.progress.connect(self.update_progress_bar)
+        self.worker.status_update.connect(lambda t, s, e:[
+            self.lbl_status.setText(f"Info: {t[:57]}"), 
+            self.lbl_speed.setText(f"V: {s}"), 
+            self.lbl_eta.setText(f"T: {e}")
+        ])
+        
         self.worker.item_finished.connect(self.color_link_by_state)
         self.worker.finished.connect(self.downloads_completed)
         self.worker.start()
 
-    def color_link_by_state(self, url, state):
+    def color_link_by_state(self, url, state, error_msg=""):
         if hasattr(self, 'stats') and state in self.stats: self.stats[state] += 1
+        
         if state == "success": color, underline = QColor("#a6e3a1"), False
         elif state == "exists": color, underline = QColor("#fab387"), False
-        elif state == "error": color, underline = QColor("#f38ba8"), True
+        elif state == "error": 
+            color, underline = QColor("#f38ba8"), True
+            if error_msg:
+                self.error_details.append(f"🔗 {url}\n❌ {error_msg.strip()}")
         else: return
         
-        # Correccion para encontrar URL si fue modificada (www -> https)
         url_to_find = url.replace('https://', '') if url.startswith('https://www.') else url
         cursor = self.text_input.document().find(url_to_find)
         if not cursor.isNull():
@@ -225,13 +255,23 @@ class MainWindow(QMainWindow):
             cursor.mergeCharFormat(fmt)
 
     def downloads_completed(self):
-        self.lbl_status.setText("Completado."); self.btn_download.setEnabled(True)
-        self.text_input.setReadOnly(False); self.refresh_file_list()
-        msg = f"✅ Nuevos: {self.stats['success']}\n⏭️ Saltados: {self.stats['exists']}\n❌ Errores: {self.stats['error']}"
+        self.update_progress_bar(100) # Restauramos la barra a su estado normal
+        self.lbl_status.setText("Completado.")
+        self.btn_download.setEnabled(True)
+        self.text_input.setReadOnly(False)
+        self.refresh_file_list()
+        
+        msg = f"✅ Nuevos/Procesados: {self.stats['success']}\n⏭️ Saltados (Ya existían): {self.stats['exists']}\n❌ Errores: {self.stats['error']}"
+        
+        if hasattr(self, 'error_details') and self.error_details:
+            msg += "\n\n⚠️ Detalles de Errores:\n" + "\n\n".join(self.error_details[:3])
+            if len(self.error_details) > 3:
+                msg += "\n\n... y más errores."
+                
         QMessageBox.information(self, "Resumen", msg)
 
     def update_ytdlp(self):
         self.btn_update.setEnabled(False)
         self.upd_worker = UpdateWorker()
-        self.upd_worker.finished.connect(lambda s, m: [self.btn_update.setEnabled(True), QMessageBox.information(self, "Info", m) if s else QMessageBox.critical(self, "Error", m)])
+        self.upd_worker.finished.connect(lambda s, m:[self.btn_update.setEnabled(True), QMessageBox.information(self, "Info", m) if s else QMessageBox.critical(self, "Error", m)])
         self.upd_worker.start()
