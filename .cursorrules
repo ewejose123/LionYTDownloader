@@ -1,0 +1,31 @@
+# LionYTDownloader — coding project
+
+Cognition Stack scope: `project-lionytdownloader`
+
+## Bootstrap (required — enforced by hook)
+
+Cognition Stack MCP is available. Bootstrap is **enforced**: a Cursor hook blocks Read/Grep/Shell/etc. until every block in `.cursor/cogstack-bootstrap.json` is opened via `open_block`.
+
+On the **first message of every conversation**, before any other action, parallel `open_block` for all blocks listed in `.cursor/cogstack-bootstrap.json` (always includes `cogstack-agent-procedure`). Follow the opened procedure for the rest of the session. Re-run it if context was compacted or the user says "reload cogstack".
+
+Do not assume a harness `.cursorrules` will trigger this — in a consumer project repo only **this file** and `.cursor/rules/cogstack-bootstrap.mdc` are loaded.
+
+## Bootstrap blocks (token-efficient)
+
+After required blocks from `.cursor/cogstack-bootstrap.json`:
+
+- **Do not** load all blocks below on the first message.
+- Load each block **only when the task needs it**, in the **same parallel batch** as other opens for that task:
+  - `general-coding-practices` — when writing or reviewing code
+  - `debugging-methodology` — when investigating bugs or failures
+  - `code-review-checklist` — when the user asks for review or before PR-style checks
+  - `cogstack-block-creation-guidelines` — when creating or updating blocks (or open maintenance procedure)
+
+Open project-specific blocks from `blocks/project-lionytdownloader/` when search/list metadata shows they apply — batch `open_block` calls together.
+
+## Shell (Windows)
+PowerShell 5.x: no `&&` — use `;` or separate commands. Cogstack CLIs: pass `--harness "<path-to-Cognition-Stack>"` (see harness `.cogstack-scope` → `harness_repo_path`). Prefer MCP tools when connected.
+
+## Project knowledge location
+- Blocks: `blocks/project-lionytdownloader/` in the harness
+- Library: `library/project-lionytdownloader/` in the harness

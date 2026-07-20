@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "python .cursor/hooks/cogstack-bootstrap-gate.py"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "python .cursor/hooks/cogstack-bootstrap-gate.py",
+        "matcher": "CallMcpTool|MCP"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "python .cursor/hooks/cogstack-bootstrap-gate.py"
+      }
+    ]
+  }
+}

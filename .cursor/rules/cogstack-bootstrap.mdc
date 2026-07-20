@@ -1,0 +1,26 @@
+---
+description: Cognition Stack bootstrap — required before any other tool use
+alwaysApply: true
+---
+
+# Bootstrap first (enforced once per conversation)
+
+This is a Cognition Stack consumer project. Bootstrap runs **once at the start of each new chat** — not on every follow-up message or topic change within the same chat.
+
+## First turn only — MCP discovery
+
+On the **first agent turn** of a new conversation (before any Read/Grep/Shell):
+
+1. Read `.cursor/cogstack-bootstrap.json` for required blocks.
+2. Call `open_block` for **every** listed block in **one parallel batch**.
+3. Then work normally for the rest of this chat.
+
+A hook blocks other tools until required blocks are opened, then **stays open** for all later prompts in this conversation.
+
+## Do not re-bootstrap on follow-ups
+
+"Also add…", "now let's…", refinements, and new sub-topics in the **same chat** → execute directly. Do **not** re-run bootstrap or re-open the standard block bundle unless the user says "reload cogstack" or context was compacted and procedure was lost.
+
+## Re-bootstrap (rare)
+
+Re-open `cogstack-agent-procedure` only after context compaction or when the user explicitly asks.

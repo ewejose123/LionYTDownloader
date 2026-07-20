@@ -1,0 +1,5 @@
+{
+  "required_blocks": [
+    "cogstack-agent-procedure"
+  ]
+}

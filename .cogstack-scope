@@ -1,0 +1,5 @@
+harness_repo_path: "D:/Projects/Cognition Stack"
+scopes:
+  - "global"
+  - "project-lionytdownloader"
+default_scope: "project-lionytdownloader"

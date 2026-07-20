@@ -1,37 +1,48 @@
-import sys
+import ctypes
 import os
-from PyQt6.QtWidgets import QApplication
+import sys
+
 from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication, QSystemTrayIcon
+
 from ui import MainWindow
 
-def resource_path(relative_path):
-    """Obtiene la ruta absoluta a los recursos (necesario para PyInstaller)"""
+
+def resource_path(relative_path: str) -> str:
+    """Obtiene la ruta absoluta a los recursos (necesario para PyInstaller)."""
     try:
-        # PyInstaller crea una carpeta temporal _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
+        base_path = sys._MEIPASS  # type: ignore[attr-defined]
+    except AttributeError:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
+def apply_theme(app: QApplication) -> None:
+    try:
+        import qdarktheme
+
+        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+    except (ImportError, AttributeError):
+        app.setStyle("Fusion")
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    
-    # --- AÑADE ESTO PARA QUE EL ICONO SE VEA EN LA BARRA DE TAREAS ---
-    import ctypes
-    myappid = 'LionApps.YTDownloader.YTD.1' # Una cadena única
+    app.setQuitOnLastWindowClosed(False)
+
+    myappid = "LionApps.YTDownloader.YTD.1"
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    # -----------------------------------------------------------------
 
     app_icon = QIcon(resource_path("icon.ico"))
     app.setWindowIcon(app_icon)
-    
-    try:
-        import qdarktheme
-        qdarktheme.setup_theme("dark", custom_colors={"primary": "#89b4fa"})
-    except Exception as e:
-        print("Tema oscuro no cargado:", e)
-        app.setStyle("Fusion")
-    
-    window = MainWindow()
+    apply_theme(app)
+
+    tray = QSystemTrayIcon(app_icon, app)
+    tray.setToolTip("Lion YT Downloader")
+
+    window = MainWindow(tray_icon=tray)
+    if QSystemTrayIcon.isSystemTrayAvailable():
+        tray.show()
+
     window.show()
     sys.exit(app.exec())
